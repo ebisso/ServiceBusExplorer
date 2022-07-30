@@ -20,6 +20,7 @@
 #endregion
 
 using System.Threading.Tasks;
+using Azure;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
@@ -34,7 +35,7 @@ namespace ServiceBusExplorer.ServiceBus.Helpers
 
         public async Task<bool> IsPremiumNamespace()
         {
-            var administrationClient = new ServiceBusAdministrationClient(ConnectionString);
+            var administrationClient = CreateServiceBusAdministrationClient(ConnectionString);
             NamespaceProperties namespaceProperties = await administrationClient.GetNamespacePropertiesAsync().ConfigureAwait(false);
 
             return namespaceProperties.MessagingSku == MessagingSku.Premium;
@@ -42,14 +43,31 @@ namespace ServiceBusExplorer.ServiceBus.Helpers
 
         public async Task<bool> IsQueue(string name)
         {
-            var administrationClient = new ServiceBusAdministrationClient(ConnectionString);
+            var administrationClient = CreateServiceBusAdministrationClient(ConnectionString);
             return await administrationClient.QueueExistsAsync(name).ConfigureAwait(false);
         }
 
         public async Task<bool> IsTopic(string name)
         {
-            var administrationClient = new ServiceBusAdministrationClient(ConnectionString);
+            var administrationClient = CreateServiceBusAdministrationClient(ConnectionString);
             return await administrationClient.TopicExistsAsync(name).ConfigureAwait(false);
+        }
+
+        public static ServiceBusAdministrationClient CreateServiceBusAdministrationClient(string connectionString)
+        {
+            var connectionStringProperties = 
+                ServiceBusConnectionStringProperties.Parse(connectionString);
+            
+            if (!string.IsNullOrEmpty(connectionStringProperties.SharedAccessSignature))
+            {
+                return new ServiceBusAdministrationClient(
+                    connectionStringProperties.FullyQualifiedNamespace,
+                    new AzureSasCredential(connectionStringProperties.SharedAccessSignature));
+            }
+            else
+            {
+                return new ServiceBusAdministrationClient(connectionString);
+            }
         }
     }
 }

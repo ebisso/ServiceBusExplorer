@@ -5360,7 +5360,7 @@ namespace ServiceBusExplorer
 
         public async Task<List<QueueProperties>> GetQueueProperties(List<QueueDescription> oldQueueDescriptions)
         {
-            var administrationClient = new ServiceBusAdministrationClient(connectionString);
+            var administrationClient = ServiceBusHelper2.CreateServiceBusAdministrationClient(connectionString);
             var result = new List<QueueProperties>();
 
             foreach(QueueDescription oldQueueDescription in oldQueueDescriptions)
@@ -5378,7 +5378,7 @@ namespace ServiceBusExplorer
 
         public async Task<List<SubscriptionProperties>> GetSubscriptionProperties(List<SubscriptionWrapper> oldSubscriptionWrappers)
         {
-            var managementClient = new ServiceBusAdministrationClient(connectionString);
+            var managementClient = ServiceBusHelper2.CreateServiceBusAdministrationClient(connectionString);
             var result = new List<SubscriptionProperties>();
 
             foreach (SubscriptionWrapper oldSubscriptionWrapper in oldSubscriptionWrappers)

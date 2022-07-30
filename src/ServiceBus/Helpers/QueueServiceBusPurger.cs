@@ -65,7 +65,7 @@ namespace ServiceBusExplorer.ServiceBus.Helpers
 
         protected async override Task<long> GetMessageCount(QueueProperties entity, bool deadLetterQueueData)
         {
-            var client = new ServiceBusAdministrationClient(serviceBusHelper.ConnectionString);
+            var client = ServiceBusHelper2.CreateServiceBusAdministrationClient(serviceBusHelper.ConnectionString);
 
             if (deadLetterQueueData)
             {
