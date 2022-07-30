@@ -74,6 +74,7 @@ namespace ServiceBusExplorer.Helpers
         const string ConnectionStringEndpoint = "endpoint";
         const string ConnectionStringSharedAccessKeyName = "sharedaccesskeyname";
         const string ConnectionStringSharedAccessKey = "sharedaccesskey";
+        const string ConnectionStringSharedAccessSignature = "sharedaccesssignature";
         const string ConnectionStringStsEndpoint = "stsendpoint";
         const string ConnectionStringRuntimePort = "runtimeport";
         const string ConnectionStringManagementPort = "managementport";
@@ -238,6 +239,13 @@ namespace ServiceBusExplorer.Helpers
                 toLower.Contains(ConnectionStringSharedAccessKey))
             {
                 return GetServiceBusNamespaceUsingSAS(key, connectionString, staticWriteToLog, 
+                    isUserCreated, parameters);
+            }
+
+            if (toLower.Contains(ConnectionStringEndpoint) &&
+                toLower.Contains(ConnectionStringSharedAccessSignature))
+            {
+                return GetServiceBusNamespaceUsingSAS(key, connectionString, staticWriteToLog,
                     isUserCreated, parameters);
             }
 
@@ -521,23 +529,29 @@ namespace ServiceBusExplorer.Helpers
                               parameters[ConnectionStringStsEndpoint] :
                               null;
 
-            string ns = GetNamespaceNameFromEndpoint(endpoint, staticWriteToLog, key);           
+            string ns = GetNamespaceNameFromEndpoint(endpoint, staticWriteToLog, key);
 
-            if (!parameters.ContainsKey(ConnectionStringSharedAccessKeyName) || 
-                string.IsNullOrWhiteSpace(parameters[ConnectionStringSharedAccessKeyName]))
+            string sharedAccessKeyName = string.Empty;
+            string sharedAccessKey = string.Empty;
+            if (!parameters.ContainsKey(ConnectionStringSharedAccessSignature))
             {
-                staticWriteToLog(string.Format(CultureInfo.CurrentCulture, ServiceBusNamespaceSharedAccessKeyNameIsInvalid, key));
+                if (!parameters.ContainsKey(ConnectionStringSharedAccessKeyName) ||
+                    string.IsNullOrWhiteSpace(parameters[ConnectionStringSharedAccessKeyName]))
+                {
+                    staticWriteToLog(string.Format(CultureInfo.CurrentCulture, ServiceBusNamespaceSharedAccessKeyNameIsInvalid, key));
+                }
+
+                sharedAccessKeyName = parameters[ConnectionStringSharedAccessKeyName];
+
+                if (!parameters.ContainsKey(ConnectionStringSharedAccessKey) || string.IsNullOrWhiteSpace(parameters[ConnectionStringSharedAccessKey]))
+                {
+                    staticWriteToLog(string.Format(CultureInfo.CurrentCulture,
+                        ServiceBusNamespaceSharedAccessKeyIsInvalid, key));
+                }
+
+                sharedAccessKey = parameters[ConnectionStringSharedAccessKey];
             }
-
-            var sharedAccessKeyName = parameters[ConnectionStringSharedAccessKeyName];
-
-            if (!parameters.ContainsKey(ConnectionStringSharedAccessKey) || string.IsNullOrWhiteSpace(parameters[ConnectionStringSharedAccessKey]))
-            {
-                staticWriteToLog(string.Format(CultureInfo.CurrentCulture, 
-                    ServiceBusNamespaceSharedAccessKeyIsInvalid, key));
-            }
-
-            var sharedAccessKey = parameters[ConnectionStringSharedAccessKey];
+                
             var settings = new MessagingFactorySettings();
             var transportType = settings.TransportType;
 
